@@ -1,0 +1,36 @@
+.counter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+}
+.counter-displayer {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 6vh;
+  width: 18vw;
+  background-color: lightgrey;
+}
+
+.counter-heading {
+  font-size: 18px;
+  color: #0398d4;
+}
+
+.reset-button{
+    background-color: #0398d4;
+    color: white;
+    border-radius: 0;
+    margin-top: 10px;
+    border: none;
+    height: 4vh;
+}
+
+.decrement,
+.increment,
+.count {
+  font-size: 23px;
+  font-weight: bold;
+}

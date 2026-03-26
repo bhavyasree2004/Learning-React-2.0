@@ -1,5 +1,14 @@
 import { type } from "@testing-library/user-event/dist/type";
-import { useEffect, useRef, useState , useReducer} from "react";
+import { db } from "../firebaseInit";
+import {
+  collection,
+  addDoc,
+  doc,
+  getDocs,
+  onSnapshot,
+  deleteDoc,
+} from "firebase/firestore";
+import { useEffect, useRef, useState, useReducer } from "react";
 
 //Blogging App using Hooks
 export default function Blog() {
@@ -18,10 +27,10 @@ export default function Blog() {
   const title = useRef();
   const content = useRef();
 
-  // const [blogs, setBlogs] = useState([]);
-  const [blogs, dispatch] = useReducer(blogsDispatcher, []);
+  const [blogs, setBlogs] = useState([]);
+  // const [blogs, dispatch] = useReducer(blogsDispatcher, []);
 
-  useEffect(() => title.current.focus(), [[]]);
+  useEffect(() => title.current.focus(), []);
 
   useEffect(() => {
     if (blogs.length > 0 && blogs[0].title.length > 0) {
@@ -31,26 +40,72 @@ export default function Blog() {
     }
   }, [blogs]);
 
+  useEffect(() => {
+    async function loadBlogs() {
+      // const querySnapshot = await getDocs(collection(db, "blogs"));
+
+      // const loadedBlogs = querySnapshot.docs.map((doc) => ({
+      //   id: doc.id,
+      //   ...doc.data(),
+      // }));
+      // setBlogs(loadedBlogs);
+      // console.log(loadedBlogs);
+
+      const unsub = onSnapshot(collection(db, "blogs"), (snapShot) => {
+        const blogs = snapShot.docs.map((blog) => {
+          return {
+            id: blog.id,
+            ...blog.data(),
+          };
+        });
+        console.log(blogs);
+        setBlogs(blogs);
+      });
+    }
+    loadBlogs();
+  }, []);
+
   //Passing the synthetic event as argument to stop refreshing the page on submit
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     // setBlogs([
     //   { title: title.current.value, content: content.current.value },
     //   ...blogs,
     // ]);
-    dispatch({
-      type: "ADD",
-      blog: { title: title.current.value, content: content.current.value },
+    // dispatch({
+    //   type: "ADD",
+    //   blog: { title: title.current.value, content: content.current.value },
+    // });
+
+    await addDoc(collection(db, "blogs"), {
+      title: title.current.value,
+      content: content.current.value,
+      createdOn: new Date(),
     });
 
     title.current.value = "";
     content.current.value = "";
+
     title.current.focus();
   }
 
-  const handleDelete = (index) => {
+  const handleDelete = (item) => {
+    async function deleteBlog() {
+      await deleteDoc(doc(db, "blogs", item.id));
+      // const unsub = onSnapshot(collection(db, "blogs"), (snapShot) => {
+      //   const blogs = snapShot.docs.map((blog) => {
+      //     return {
+      //       id: blog.id,
+      //       ...blog.data(),
+      //     };
+      //   });
+      //   console.log(blogs);
+      //   setBlogs(blogs);
+      // });
+    }
+    deleteBlog();
     // setBlogs(blogs.filter((_, i) => i !== index));
-    dispatch({ type: "DELETE", index: index });
+    // dispatch({ type: "DELETE", index: index });
   };
 
   return (
@@ -95,7 +150,7 @@ export default function Blog() {
           <h3>{item.title}</h3>
           <p>{item.content}</p>
           <div className="blog-btn">
-            <button className="btn remove" onClick={() => handleDelete(index)}>
+            <button className="btn remove" onClick={() => handleDelete(item)}>
               Delete
             </button>
           </div>
